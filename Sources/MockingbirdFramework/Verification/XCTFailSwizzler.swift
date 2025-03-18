@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import Testing
 
 /// A type that can handle test failures emitted by Mockingbird.
 public protocol TestFailer {
@@ -43,6 +44,7 @@ func FailTest(_ message: String, isFatal: Bool = false,
 private class StandardTestFailer: TestFailer {
   func fail(message: String, isFatal: Bool, file: StaticString, line: UInt) {
     guard isFatal else {
+      Issue.record("\(message)", sourceLocation: Testing.SourceLocation(fileID: "\(file)", filePath: "\(file)", line: Int(line), column: 0))
       return XCTFail(message, file: file, line: line)
     }
     
