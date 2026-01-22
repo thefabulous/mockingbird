@@ -21,4 +21,5 @@ let objCTypeEncodings: [String: ObjectIdentifier] = [
   "B": ObjectIdentifier(CBool.self),
   "v": ObjectIdentifier(Void.self),
   "*": ObjectIdentifier(UnsafePointer<CChar>.self),
+  "@": ObjectIdentifier(String.self),
 ]
