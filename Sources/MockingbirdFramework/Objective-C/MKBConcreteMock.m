@@ -36,8 +36,21 @@
 
 - (void)forwardInvocation:(NSInvocation *)invocation
 {
-  // Ensure that the argument and return value lifetimes are long enough.
-  [invocation retainArguments];
+  // NOTE: We intentionally do NOT call `-[NSInvocation retainArguments]` here.
+  //
+  // `retainArguments` makes this (runtime-owned, autoreleased) invocation retain
+  // every object argument and release them when it deallocs — which happens much
+  // later, when the enclosing autorelease pool drains. Under the Xcode 26.5 ObjC
+  // runtime that deferred release races with / over-releases object arguments
+  // (e.g. a UIViewController passed to a mocked method), producing an
+  // EXC_BAD_ACCESS in `-[NSInvocation dealloc]` -> `__RELEASE_OBJECTS_IN_THE_ARRAY__`.
+  //
+  // We don't need it: arguments are serialized synchronously below into
+  // `MKBArgumentMatcher`s (which retain what they need) while the caller's frame
+  // still holds the arguments alive. The only other thing `retainArguments`
+  // guarded was the return value's lifetime, which we now handle explicitly in
+  // `-deserializeReturnValue:forInvocation:` by autoreleasing the value before
+  // setting it on the invocation.
 
   NSString *selectorName = NSStringFromSelector(invocation.selector);
   NSMutableArray<MKBArgumentMatcher *> *arguments = [[NSMutableArray alloc] init];
