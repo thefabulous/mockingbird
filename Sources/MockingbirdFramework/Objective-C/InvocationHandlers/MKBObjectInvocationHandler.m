@@ -46,7 +46,13 @@
     [invocation setReturnValue:&nilReturnValue];
     return;
   }
-  
+
+  // `MKBConcreteMock forwardInvocation:` no longer calls `-[NSInvocation
+  // retainArguments]` (it over-releases object arguments under the Xcode 26.5
+  // runtime). `retainArguments` also used to keep the return value alive past
+  // `forwardInvocation:`; preserve that here by retaining + autoreleasing the
+  // value so it outlives this call frame and the caller can take ownership.
+  CFAutorelease(CFBridgingRetain(returnValue));
   [invocation setReturnValue:&returnValue];
 }
 
